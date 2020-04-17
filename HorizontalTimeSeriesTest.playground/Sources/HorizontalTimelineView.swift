@@ -18,12 +18,13 @@ public class HorizontalTimelineView: UIView {
         let lineY = rect.height / 2
         
         if downTimeIntervals.count == 0 {
-            uptimeColor.setStroke()
-            let path = UIBezierPath()
-            path.lineWidth = 10.0
-            path.move(to: CGPoint(x: 0, y: lineY))
-            path.addLine(to: CGPoint(x: rect.width, y: lineY))
-            path.stroke()
+            if let context = UIGraphicsGetCurrentContext() {
+                context.setLineWidth(rect.height)
+                context.setStrokeColor(uptimeColor.cgColor)
+                context.move(to: CGPoint(x: 0, y: lineY))
+                context.addLine(to: CGPoint(x: rect.width, y: lineY))
+                context.strokePath()
+            }
         } else {
             let intervalRange = CGFloat(DateInterval(start: startTime, end: endTime).duration)
             
@@ -31,12 +32,6 @@ public class HorizontalTimelineView: UIView {
             
             var previousPathEndX = CGFloat(0.0)
             for interval in intervals {
-                switch interval.availabilityStatus {
-                case .down:
-                    downtimeColor.setStroke()
-                case .up:
-                    uptimeColor.setStroke()
-                }
                 
                 let distance = rect.width * CGFloat(interval.interval.duration) / intervalRange
                 let start = previousPathEndX
@@ -46,11 +41,20 @@ public class HorizontalTimelineView: UIView {
                     downtimeRegionIndexes.append((start: start, end: end))
                 }
                 
-                let path = UIBezierPath()
-                path.lineWidth = rect.height
-                path.move(to: CGPoint(x: start, y: lineY))
-                path.addLine(to: CGPoint(x: end, y: lineY))
-                path.stroke()
+                if let context = UIGraphicsGetCurrentContext() {
+                    context.setLineWidth(rect.height)
+                    
+                    switch interval.availabilityStatus {
+                    case .down:
+                        context.setStrokeColor(downtimeColor.cgColor)
+                    case .up:
+                        context.setStrokeColor(uptimeColor.cgColor)
+                    }
+                    
+                    context.move(to: CGPoint(x: start, y: lineY))
+                    context.addLine(to: CGPoint(x: end, y: lineY))
+                    context.strokePath()
+                }
                 
                 previousPathEndX = end
             }
